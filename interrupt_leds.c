@@ -1,11 +1,29 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
+#include "hardware/adc.h"
+#include "interrupt_leds.pio.h"
 
 // Definição dos pinos
 const uint pin_led_red = 13;
 const uint pin_led_blue = 12;
 const uint btn_A = 5;
 const uint btn_B = 6;
+
+#define NUM_PIXELS 25
+#define OUT_PIN 7
+
+uint32_t matrix_rgb(double r, double g, double b) {
+    return ((uint8_t)(g * 255) << 24) | ((uint8_t)(r * 255) << 16) | ((uint8_t)(b * 255) << 8);
+}
+
+void acender_todos_leds(PIO pio, uint sm, double r, double g, double b) {
+    uint32_t cor = matrix_rgb(r, g, b);
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        pio_sm_put_blocking(pio, sm, cor);
+    }
+}
 
 void gpio_irq_handler(uint gpio, uint32_t events)
 {
@@ -15,6 +33,17 @@ void gpio_irq_handler(uint gpio, uint32_t events)
 
 int main()
 {
+    PIO pio = pio0;
+    set_sys_clock_khz(128000, false);
+    stdio_init_all();
+
+    uint offset = pio_add_program(pio, &pio_matrix_program);
+    uint sm = pio_claim_unused_sm(pio, true);
+    pio_matrix_program_init(pio, sm, offset, OUT_PIN);
+
+
+
+
     stdio_init_all();
     // Inicialização e configuração do LED
     gpio_init(pin_led_red);
@@ -36,6 +65,7 @@ int main()
     // Loop principal, LED vermelho pisca constantemente
     while (true)
     {
+        acender_todos_leds(pio, sm, 1.0, 1.0, 1.0);
         gpio_put(pin_led_red, false);
         sleep_ms(100);
         gpio_put(pin_led_red, true);

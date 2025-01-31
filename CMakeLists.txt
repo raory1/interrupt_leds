@@ -44,9 +44,12 @@ pico_set_program_version(interrupt_leds "0.1")
 pico_enable_stdio_uart(interrupt_leds 1)
 pico_enable_stdio_usb(interrupt_leds 1)
 
+pico_generate_pio_header(interrupt_leds ${CMAKE_CURRENT_LIST_DIR}/interrupt_leds.pio)
 # Add the standard library to the build
 target_link_libraries(interrupt_leds
-        pico_stdlib)
+        pico_stdlib
+        hardware_pio
+	    hardware_adc)
 
 # Add the standard include files to the build
 target_include_directories(interrupt_leds PRIVATE
