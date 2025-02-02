@@ -117,7 +117,7 @@ uint32_t matrix_rgb(double r, double g, double b)
     return ((uint8_t)(g * 255) << 24) | ((uint8_t)(r * 255) << 16) | ((uint8_t)(b * 255) << 8);
 }
 
-void acender_todos_leds(PIO pio, uint sm, int current_pattern)
+void atualizar_matriz_leds(PIO pio, uint sm, int current_pattern)
 {
     for (int j = 0; j < 5; j++)
     {
@@ -145,14 +145,14 @@ void gpio_irq_handler(uint gpio, uint32_t events)
         {
             printf("Botão A pressionado\n");
             current_pattern--;
-            acender_todos_leds(pio, sm, current_pattern);
+            atualizar_matriz_leds(pio, sm, current_pattern);
         }
 
         else if (gpio == BTN_B && current_pattern < 10)
         {
             printf("Botão B pressionado\n");
             current_pattern++;
-            acender_todos_leds(pio, sm, current_pattern);
+            atualizar_matriz_leds(pio, sm, current_pattern);
         }
     }
 
@@ -198,10 +198,10 @@ int main()
     gpio_set_irq_enabled_with_callback(BTN_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     gpio_set_irq_enabled_with_callback(BTN_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
-    acender_todos_leds(pio, sm, current_pattern);
+    atualizar_matriz_leds(pio, sm, current_pattern);
 
     struct repeating_timer timer;
-    add_repeating_timer_ms(-200, blink_led, NULL, &timer);
+    add_repeating_timer_ms(-100, blink_led, NULL, &timer);
     //  Loop principal, LED vermelho pisca constantemente
 
     while (true)
