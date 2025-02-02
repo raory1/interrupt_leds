@@ -201,7 +201,7 @@ int main()
     acender_todos_leds(pio, sm, current_pattern);
 
     struct repeating_timer timer;
-    add_repeating_timer_ms(-200, blink_led, NULL, &timer);
+    add_repeating_timer_ms(-100, blink_led, NULL, &timer);
     //  Loop principal, LED vermelho pisca constantemente
 
     while (true)
