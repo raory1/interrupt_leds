@@ -103,7 +103,7 @@ double numeros[11][5][5] = {
         {0.0, 0.1, 0.1, 0.1, 0.0},
     },
     {
-        // Número 8
+        // Número 9
         {0.0, 0.1, 0.1, 0.1, 0.0},
         {0.0, 0.0, 0.0, 0.1, 0.0},
         {0.0, 0.1, 0.1, 0.1, 0.0},
@@ -141,18 +141,16 @@ void gpio_irq_handler(uint gpio, uint32_t events)
     {
         last_press_time = get_absolute_time();
         btn_last_state = true;
-        if (gpio == BTN_A)
+        if (gpio == BTN_A && current_pattern > 0)
         {
             printf("Botão A pressionado\n");
-            gpio_put(PIN_LED_RED, false);
             current_pattern--;
             acender_todos_leds(pio, sm, current_pattern);
         }
 
-        else if (gpio == BTN_B)
+        else if (gpio == BTN_B && current_pattern < 10)
         {
             printf("Botão B pressionado\n");
-            gpio_put(PIN_LED_RED, true);
             current_pattern++;
             acender_todos_leds(pio, sm, current_pattern);
         }
@@ -160,7 +158,7 @@ void gpio_irq_handler(uint gpio, uint32_t events)
 
     else if (!btn_pressed)
     {
-        printf("Botão Released");
+        printf("Botão liberado");
         printf("\n");
         btn_last_state = false;
     }
