@@ -13,7 +13,13 @@ const uint BTN_B = 6;
 
 #define NUM_PIXELS 25
 #define OUT_PIN 7
+
+volatile bool red_led_state = false;
 volatile int current_pattern = 0;
+volatile absolute_time_t last_press_time = 0;
+
+PIO pio;
+uint sm;
 
 double numeros[11][5][5] = {
     {
@@ -121,37 +127,55 @@ void acender_todos_leds(PIO pio, uint sm, int current_pattern)
             pio_sm_put_blocking(pio, sm, cor);
         }
     }
-    sleep_ms(100);
 }
 
 void gpio_irq_handler(uint gpio, uint32_t events)
 {
-    if (gpio_get(BTN_A))
+    bool btn_last_state = false;
+
+    uint32_t current_time = to_us_since_boot(get_absolute_time());
+    bool btn_pressed = !gpio_get(gpio);
+
+    if (btn_pressed && !btn_last_state &&
+        (absolute_time_diff_us(last_press_time, get_absolute_time()) > 200000))
     {
-        bool estado_atual = gpio_get(PIN_LED_BLUE);
-        gpio_put(PIN_LED_BLUE, !estado_atual);
-        current_pattern--;
+        last_press_time = get_absolute_time();
+        btn_last_state = true;
+        if (gpio == BTN_A)
+        {
+            printf("Botão A pressionado\n");
+            gpio_put(PIN_LED_RED, false);
+            current_pattern--;
+            acender_todos_leds(pio, sm, current_pattern);
+        }
+
+        else if (gpio == BTN_B)
+        {
+            printf("Botão B pressionado\n");
+            gpio_put(PIN_LED_RED, true);
+            current_pattern++;
+            acender_todos_leds(pio, sm, current_pattern);
+        }
     }
 
-    else
+    else if (!btn_pressed)
     {
-        bool estado_atual = gpio_get(PIN_LED_BLUE);
-        gpio_put(PIN_LED_BLUE, !estado_atual);
-        current_pattern++;
+        printf("Botão Released");
+        printf("\n");
+        btn_last_state = false;
     }
 }
 
 int main()
 {
-    PIO pio = pio0;
+    pio = pio0;
     set_sys_clock_khz(128000, false);
     stdio_init_all();
 
     uint offset = pio_add_program(pio, &pio_matrix_program);
-    uint sm = pio_claim_unused_sm(pio, true);
+    sm = pio_claim_unused_sm(pio, true);
     pio_matrix_program_init(pio, sm, offset, OUT_PIN);
 
-    stdio_init_all();
     // Inicialização e configuração do LED
     gpio_init(PIN_LED_RED);
     gpio_set_dir(PIN_LED_RED, GPIO_OUT);
@@ -169,14 +193,9 @@ int main()
     gpio_set_irq_enabled_with_callback(BTN_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     gpio_set_irq_enabled_with_callback(BTN_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
-    // Loop principal, LED vermelho pisca constantemente
+    acender_todos_leds(pio, sm, current_pattern);
+
     while (true)
     {
-        acender_todos_leds(pio, sm, current_pattern);
-
-        gpio_put(PIN_LED_RED, false);
-        sleep_ms(100);
-        //gpio_put(PIN_LED_RED, true);
-        sleep_ms(100);
     }
 }
