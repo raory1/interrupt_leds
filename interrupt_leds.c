@@ -166,6 +166,13 @@ void gpio_irq_handler(uint gpio, uint32_t events)
     }
 }
 
+bool blink_led(struct repeating_timer *t)
+{
+    red_led_state = !red_led_state;
+    gpio_put(PIN_LED_RED, red_led_state);
+    return true;
+}
+
 int main()
 {
     pio = pio0;
@@ -195,7 +202,12 @@ int main()
 
     acender_todos_leds(pio, sm, current_pattern);
 
+    struct repeating_timer timer;
+    add_repeating_timer_ms(-200, blink_led, NULL, &timer);
+    //  Loop principal, LED vermelho pisca constantemente
+
     while (true)
     {
+        tight_loop_contents();
     }
 }
